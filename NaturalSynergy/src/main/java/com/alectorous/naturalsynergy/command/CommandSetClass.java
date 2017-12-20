@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.alectorous.naturalsynergy.main.Reference;
+import com.alectorous.naturalsynergy.player.PlayerData;
 import com.google.common.collect.Lists;
 
 import net.minecraft.command.CommandBase;
@@ -45,9 +46,10 @@ public class CommandSetClass extends CommandBase{
 		String s = args[0];
 		if (sender instanceof EntityPlayer) {
 			EntityPlayer player = (EntityPlayer) sender;
-			NBTTagCompound data = player.getEntityData();
-			data.setString("class", s);
-			data.setInteger("level", 0);
+			PlayerData data = new PlayerData();
+			data.readFromPlayer(player);
+			data.setPlayerClass(PlayerData.stringToClass(args[0]));
+			data.saveToPlayer(player);
 		}
 		
 	}

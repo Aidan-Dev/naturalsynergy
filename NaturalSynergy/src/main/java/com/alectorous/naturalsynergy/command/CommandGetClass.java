@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.alectorous.naturalsynergy.main.Reference;
+import com.alectorous.naturalsynergy.player.PlayerData;
 import com.google.common.collect.Lists;
 
 import net.minecraft.command.CommandBase;
@@ -40,15 +41,12 @@ public class CommandGetClass extends CommandBase{
 		
 		if (sender instanceof EntityPlayer) {
 			EntityPlayer player = (EntityPlayer) sender;
-			if (player.getEntityData().hasKey("class")) {
-				
-				player.sendMessage(new TextComponentTranslation(player.getEntityData().getString("class")));
-			}
-			else {
-				player.sendMessage(new TextComponentTranslation("You haven't set a class yet"));
-			}
+			
+			PlayerData data = new PlayerData();
+			data.readFromPlayer(player);
+			
+			player.sendMessage(new TextComponentTranslation(data.getPlayerClass().toString()));
 		}
-		
 	}
 		
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.alectorous.naturalsynergy.main.Reference;
+import com.alectorous.naturalsynergy.player.PlayerData;
 import com.google.common.collect.Lists;
 
 import net.minecraft.command.CommandBase;
@@ -41,11 +42,14 @@ public class CommandSetLevel extends CommandBase{
 		
 		if (sender instanceof EntityPlayer){
 			EntityPlayer player = (EntityPlayer) sender;
+			PlayerData data = new PlayerData();
+			data.readFromPlayer(player);
 			
 			if (args.length == 1) {
 				try {
 					int level = Integer.parseInt(args[0]);
-					player.getEntityData().setInteger("level", level);
+					data.setLevel(level);
+					data.saveToPlayer(player);
 				}
 				catch (NumberFormatException e) {
 					player.sendMessage(new TextComponentTranslation("Please enter a number from 0 to 3"));

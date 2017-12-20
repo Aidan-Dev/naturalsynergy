@@ -1,5 +1,6 @@
 package com.alectorous.naturalsynergy.main;
 
+import com.alectorous.naturalsynergy.command.CommandDebug;
 import com.alectorous.naturalsynergy.command.CommandGetClass;
 import com.alectorous.naturalsynergy.command.CommandGetLevel;
 import com.alectorous.naturalsynergy.command.CommandSetClass;
@@ -33,6 +34,7 @@ public class Main{
 		event.registerServerCommand(new CommandGetLevel());
 		event.registerServerCommand(new CommandSetLevel());
 		event.registerServerCommand(new CommandTeleport());
+		event.registerServerCommand(new CommandDebug());
 	}
 	
 	@EventHandler
