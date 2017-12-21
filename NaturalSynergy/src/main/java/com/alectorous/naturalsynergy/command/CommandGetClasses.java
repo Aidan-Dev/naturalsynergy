@@ -12,24 +12,24 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
 
-public class CommandDebug extends CommandBase{
+public class CommandGetClasses extends CommandBase{
 	private ArrayList aliases;
 	
-	public CommandDebug() {
+	public CommandGetClasses() {
 		
-		aliases = Lists.newArrayList(Reference.MOD_ID, "test", "TEST");
+		aliases = Lists.newArrayList(Reference.MOD_ID, "getClasses", "getclasses", "GETCLASSES");
 	}
 	
 	@Override
 	public String getName() {
-		return "test";
+		return "getClasses";
 	}
 
 	@Override
 	public String getUsage(ICommandSender sender) {
-		return "test";
+		return "getClasses";
 	}
 	
 	public List<String> getAliases() {
@@ -38,12 +38,15 @@ public class CommandDebug extends CommandBase{
 	
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-
-		EntityPlayer player = (EntityPlayer) sender;
-		PlayerData data = new PlayerData();
-		data.readFromPlayer(player);
-		player.sendMessage(new TextComponentString(Integer.toString(data.availableClasses.size())));
 		
+		if (sender instanceof EntityPlayer) {
+			EntityPlayer player = (EntityPlayer) sender;
+			
+			PlayerData data = new PlayerData();
+			data.readFromPlayer(player);
+			
+			player.sendMessage(new TextComponentTranslation(data.availableClasses.toString()));
+		}
 	}
 		
 }

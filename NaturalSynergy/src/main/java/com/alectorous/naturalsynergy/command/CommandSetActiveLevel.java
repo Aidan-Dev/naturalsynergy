@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.alectorous.naturalsynergy.main.Reference;
+import com.alectorous.naturalsynergy.network.MessagePlayerData;
+import com.alectorous.naturalsynergy.network.PacketHandler;
 import com.alectorous.naturalsynergy.player.PlayerData;
 import com.google.common.collect.Lists;
 
@@ -14,17 +16,17 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentTranslation;
 
-public class CommandSetLevel extends CommandBase{
+public class CommandSetActiveLevel extends CommandBase{
 	
 	private ArrayList<String> aliases;
 	
-	public CommandSetLevel() {
-		aliases = Lists.newArrayList(Reference.MOD_ID, "setLevel", "setlevel", "SETLEVEL");
-	}
-
+	public CommandSetActiveLevel() {
+		aliases = Lists.newArrayList(Reference.MOD_ID, "setActiveLevel", "setactivelevel", "SETACTIVELEVEL");
+	}	
+	
 	@Override
 	public String getName() {
-		return "setLevel";
+		return "setActiveLevel";
 	}
 
 	@Override
@@ -34,7 +36,7 @@ public class CommandSetLevel extends CommandBase{
 	
 	@Override
 	public String getUsage(ICommandSender sender) {
-		return "setLevel <int>";
+		return "setActiveLevel <int>";
 	}
 
 	@Override
@@ -48,11 +50,11 @@ public class CommandSetLevel extends CommandBase{
 			if (args.length == 1) {
 				try {
 					int level = Integer.parseInt(args[0]);
-					data.setLevel(level);
+					data.setActiveLevel(level);
 					data.saveToPlayer(player);
 				}
 				catch (NumberFormatException e) {
-					player.sendMessage(new TextComponentTranslation("Please enter a number from 0 to 3"));
+					player.sendMessage(new TextComponentTranslation("Please enter a number from 0 to 4"));
 				}
 			}
 		}

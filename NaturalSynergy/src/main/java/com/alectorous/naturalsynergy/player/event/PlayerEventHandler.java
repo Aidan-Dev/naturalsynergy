@@ -2,6 +2,8 @@ package com.alectorous.naturalsynergy.player.event;
 
 import java.util.HashMap;
 
+import com.alectorous.naturalsynergy.network.MessagePlayerData;
+import com.alectorous.naturalsynergy.network.PacketHandler;
 import com.alectorous.naturalsynergy.player.EnumClass;
 import com.alectorous.naturalsynergy.player.PlayerData;
 
@@ -29,6 +31,11 @@ public class PlayerEventHandler {
 			PlayerData data = new PlayerData();
 			data.loadDefaults();
 			data.saveToPlayer(event.player);
+		}
+		else {
+			MessagePlayerData message = new MessagePlayerData();
+			message.setData(event.player.getEntityData());
+			PacketHandler.sendToClient(message, event.player);
 		}
 	}
 	
@@ -61,7 +68,6 @@ public class PlayerEventHandler {
 	
 	@SubscribeEvent
 	public static void playerDamaged(LivingDamageEvent event) {
-		System.out.println(event.getSource().damageType);
 		if (event.getEntityLiving() instanceof EntityPlayer) {
 			EntityPlayer player = (EntityPlayer) event.getEntityLiving(); 
 			if (event.isCancelable()) {

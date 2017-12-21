@@ -1,5 +1,11 @@
 package com.alectorous.naturalsynergy.player;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import com.alectorous.naturalsynergy.network.MessagePlayerData;
+import com.alectorous.naturalsynergy.network.PacketHandler;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
@@ -8,18 +14,49 @@ import net.minecraftforge.common.DimensionManager;
 
 public class PlayerData {
 	
-	private EnumClass playerClass;
-	private int level; 	
-	private boolean canSwitch;
+	private EnumClass activeClass;
+	public HashMap<EnumClass, Integer> availableClasses = new HashMap<>();
+	private int activeLevel; 
 	private BlockPos linkedPedestal;
 	private World pedestalWorld;
 	
+	
 	public void readFromPlayer(EntityPlayer player){
 		NBTTagCompound tag = player.getEntityData();
-		this.playerClass = stringToClass(tag.getString("class"));
-		this.level = tag.getInteger("level");
-		this.canSwitch = tag.getBoolean("canSwitch");
+		this.activeClass = stringToClass(tag.getString("class"));
+		this.activeLevel = tag.getInteger("level");
 		
+		if (tag.hasKey("availableClasses")) {
+			String[] sets = tag.getString("availableClasses").split("%");
+			
+			for (String s : sets) {
+				String[] halves = s.split(":");
+				this.availableClasses.put(stringToClass(halves[0]), Integer.parseInt(halves[1]));
+			}
+		}
+		if (!tag.getString("linkedPedestal").equals("none")) {
+			String[] coords = tag.getString("linkedPedestal").split(":");
+			this.linkedPedestal = new BlockPos(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]), Integer.parseInt(coords[2]));
+			for (World w : DimensionManager.getWorlds()) {
+				if (w.provider.getDimension() == Integer.parseInt(coords[3])) {
+					pedestalWorld = w;
+				}
+			}
+		}
+	}
+	
+	public void readFromNBT(NBTTagCompound tag){
+		this.activeClass = stringToClass(tag.getString("class"));
+		this.activeLevel = tag.getInteger("level");
+		
+		if (tag.hasKey("availableClasses")) {
+			String[] sets = tag.getString("availableClasses").split("%");
+			
+			for (String s : sets) {
+				String[] halves = s.split(":");
+				this.availableClasses.put(stringToClass(halves[0]), Integer.parseInt(halves[1]));
+			}
+		}
 		if (!tag.getString("linkedPedestal").equals("none")) {
 			String[] coords = tag.getString("linkedPedestal").split(":");
 			this.linkedPedestal = new BlockPos(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]), Integer.parseInt(coords[2]));
@@ -33,46 +70,94 @@ public class PlayerData {
 	
 	public void saveToPlayer(EntityPlayer player) {
 		NBTTagCompound tag = player.getEntityData();
-		tag.setString("class", classToString(playerClass));
-		tag.setInteger("level", level);
-		tag.setBoolean("canSwitch", canSwitch);
+		tag.setString("class", classToString(activeClass));
+		tag.setInteger("level", activeLevel);
 		if (this.linkedPedestal != null) {
 			tag.setString("linkedPedestal", linkedPedestal.getX() + ":" + linkedPedestal.getY() + ":" + linkedPedestal.getZ() + ":" + pedestalWorld.provider.getDimension());
 		}
 		else {
 			tag.setString("linkedPedestal", "none");
 		}
+		
+		if (this.availableClasses.size()>0) {
+			StringBuilder s = new StringBuilder("");
+			for (EnumClass playerClass : this.availableClasses.keySet()) {
+				s.append(classToString(playerClass));
+				s.append(":");
+				s.append(this.availableClasses.get(playerClass));
+				s.append("%");
+			}
+			tag.setString("availableClasses", s.toString());
+		}
+		
+		syncClient(player);
+		
+	}
+	
+	
+	public void syncClient(EntityPlayer player) {
+		MessagePlayerData message = new MessagePlayerData();
+		message.setData(player.getEntityData());
+		PacketHandler.sendToClient(message, player);
+	}
+	
+	public NBTTagCompound toNBT() {
+		NBTTagCompound tag = new NBTTagCompound();
+		tag.setString("class", classToString(activeClass));
+		tag.setInteger("level", activeLevel);
+		if (this.linkedPedestal != null) {
+			tag.setString("linkedPedestal", linkedPedestal.getX() + ":" + linkedPedestal.getY() + ":" + linkedPedestal.getZ() + ":" + pedestalWorld.provider.getDimension());
+		}
+		else {
+			tag.setString("linkedPedestal", "none");
+		}
+		
+		if (this.availableClasses.size()>0) {
+			StringBuilder s = new StringBuilder("");
+			for (EnumClass playerClass : this.availableClasses.keySet()) {
+				s.append(classToString(playerClass));
+				s.append(":");
+				s.append(this.availableClasses.get(playerClass));
+				s.append("%");
+			}
+			tag.setString("availableClasses", s.toString());
+		}
+		return tag;
 	}
 	
 	public void loadDefaults() {
-		this.playerClass = EnumClass.NONE;
-		this.level = 0;
-		this.canSwitch = false;
+		this.activeClass = EnumClass.NONE;
+		this.activeLevel = 0;
 	}
 	
 	public EnumClass getPlayerClass() {
-		return playerClass;
+		return activeClass;
 	}
 
 	public void setPlayerClass(EnumClass playerClass) {
-		this.playerClass = playerClass;
+		if (this.availableClasses.keySet().contains((playerClass))) {
+			this.activeClass = playerClass;
+		}
 	}
 
 	public int getLevel() {
-		return level;
+		return activeLevel;
 	}
 
-	public void setLevel(int level) {
-		this.level = level;
+	public void setClassLevel(int level) {
+		if (this.activeClass != EnumClass.NONE) {
+			this.availableClasses.put(activeClass, level);
+		}
+	}
+	
+	public void setActiveLevel(int level) {
+		if (this.activeClass != EnumClass.NONE) {
+			if (level <= this.availableClasses.get(activeClass)) {
+				this.activeLevel = level;
+			}
+		}
 	}
 
-	public boolean isCanSwitch() {
-		return canSwitch;
-	}
-
-	public void setCanSwitch(boolean canSwitch) {
-		this.canSwitch = canSwitch;
-	}
 
 	public BlockPos getLinkedPedestal() {
 		return linkedPedestal;
@@ -80,6 +165,24 @@ public class PlayerData {
 
 	public void setLinkedPedestal(BlockPos linkedPedestal) {
 		this.linkedPedestal = linkedPedestal;
+	}
+		
+	public boolean canSwitch() {
+		return this.availableClasses.size()>1;
+	}
+	
+	public boolean hasClass(EnumClass playerClass) {
+		return this.availableClasses.keySet().contains(playerClass);
+	}
+	
+	public void addClass(EnumClass playerClass) {
+		if (!this.availableClasses.keySet().contains(playerClass)) {
+				this.availableClasses.put(playerClass, 0);
+		}
+	}
+	
+	public void removeClass(EnumClass playerClass) {
+		this.availableClasses.remove(playerClass);
 	}
 	
 	public static String classToString(EnumClass playerClass) {

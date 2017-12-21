@@ -14,47 +14,51 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.text.TextComponentTranslation;
 
-public class CommandSetClass extends CommandBase{
+public class CommandSetClassLevel extends CommandBase{
 	
-	private ArrayList aliases;
+	private ArrayList<String> aliases;
 	
-	public CommandSetClass() {
-		
-		aliases = Lists.newArrayList(Reference.MOD_ID, "setClass", "setclass", "SETCLASS");
-	}
+	public CommandSetClassLevel() {
+		aliases = Lists.newArrayList(Reference.MOD_ID, "setClassLevel", "setclasslevel", "SETCLASSLEVEL");
+	}	
 	
 	@Override
 	public String getName() {
-		return "setClass";
+		return "setClassLevel";
 	}
 
 	@Override
-	public String getUsage(ICommandSender sender) {
-		return "setClass <class>";
-	}
-	
 	public List<String> getAliases() {
 		return aliases;
 	}
 	
 	@Override
+	public String getUsage(ICommandSender sender) {
+		return "setClassLevel <int>";
+	}
+
+	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-		if (args.length < 1) {
-			return;
-		}
 		
-		String s = args[0];
-		if (sender instanceof EntityPlayer) {
+		if (sender instanceof EntityPlayer){
 			EntityPlayer player = (EntityPlayer) sender;
 			PlayerData data = new PlayerData();
 			data.readFromPlayer(player);
-			data.setPlayerClass(PlayerData.stringToClass(args[0]));
-			data.saveToPlayer(player);
+			
+			if (args.length == 1) {
+				try {
+					int level = Integer.parseInt(args[0]);
+					data.setClassLevel(level);
+					data.saveToPlayer(player);
+				}
+				catch (NumberFormatException e) {
+					player.sendMessage(new TextComponentTranslation("Please enter a number from 0 to 3"));
+				}
+			}
 		}
 		
 	}
-		
-	
 	
 }
